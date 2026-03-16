@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚚 Controle de Rotas</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #151820;
+    --card: #1c2030;
+    --border: #252a3a;
+    --accent: #f0c040;
+    --accent2: #4af0b0;
+    --accent3: #f05070;
+    --text: #e8ecf8;
+    --muted: #6b7394;
+    --success: #3ddc84;
+    --warning: #f0a030;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; }
+  
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    gap: 12px;
+  }
+  .logo { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .header-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  
+  /* NAV TABS */
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    padding: 0 16px;
+  }
+  nav button {
+    background: none; border: none; color: var(--muted);
+    padding: 14px 20px; cursor: pointer;
+    font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 600;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    transition: all .2s;
+  }
+  nav button:hover { color: var(--text); }
+  nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* MAIN */
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 0.8rem; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 16px;
+  }
+
+  /* GRID FORMS */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  @media(max-width:700px) {
+    .grid2, .grid3, .grid4 { grid-template-columns: 1fr 1fr; }
+  }
+  @media(max-width:480px) {
+    .grid2, .grid3, .grid4 { grid-template-columns: 1fr; }
+  }
+
+  label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  input, select, textarea {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); padding: 10px 12px;
+    font-family: 'Space Mono', monospace; font-size: 0.85rem;
+    transition: border-color .2s;
+    appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none; border-color: var(--accent);
+  }
+  textarea { resize: vertical; min-height: 70px; }
+  select option { background: var(--card); }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 18px; border-radius: 8px; border: none;
+    font-family: 'Syne', sans-serif; font-size: 0.82rem; font-weight: 700;
+    cursor: pointer; transition: all .2s; white-space: nowrap;
+  }
+  .btn-accent { background: var(--accent); color: #0d0f14; }
+  .btn-accent:hover { background: #ffd060; transform: translateY(-1px); }
+  .btn-ghost { background: var(--border); color: var(--text); }
+  .btn-ghost:hover { background: var(--muted); }
+  .btn-danger { background: var(--accent3); color: #fff; }
+  .btn-danger:hover { background: #ff3050; }
+  .btn-green { background: var(--accent2); color: #0d0f14; }
+  .btn-green:hover { background: #60ffca; }
+  .btn-sm { padding: 7px 12px; font-size: 0.78rem; }
+
+  /* STATS ROW */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 14px; margin-bottom: 20px; }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+    text-align: center;
+  }
+  .stat-val { font-size: 1.6rem; font-weight: 800; font-family: 'Space Mono'; color: var(--accent); }
+  .stat-label { font-size: 0.72rem; color: var(--muted); margin-top: 4px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  th { background: var(--surface); color: var(--muted); padding: 10px 12px; text-align: left; font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(240,192,64,.04); }
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px;
+  }
+  .badge-shopee { background: #f0502020; color: #f07060; }
+  .badge-ml { background: #f0c04020; color: var(--accent); }
+  .badge-outros { background: #4af0b020; color: var(--accent2); }
+
+  /* STARS */
+  .stars { color: var(--accent); letter-spacing: -2px; }
+
+  /* RELATORIO */
+  .rel-section { margin-bottom: 24px; }
+  .rel-section h3 { font-size: 0.75rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  .rel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .rel-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--surface); border-radius: 8px; }
+  .rel-item-label { font-size: 0.82rem; color: var(--muted); }
+  .rel-item-val { font-family: 'Space Mono'; font-size: 0.9rem; font-weight: 700; }
+  .rel-item-val.green { color: var(--success); }
+  .rel-item-val.yellow { color: var(--accent); }
+  .rel-item-val.red { color: var(--accent3); }
+
+  /* CALC */
+  .calc-result {
+    background: var(--surface); border: 2px solid var(--accent);
+    border-radius: var(--radius); padding: 20px; text-align: center;
+    margin-top: 16px;
+  }
+  .calc-big { font-size: 2.2rem; font-family: 'Space Mono'; font-weight: 700; color: var(--accent); }
+  .calc-sub { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 20px;
+    font-size: 0.85rem; font-weight: 600;
+    transform: translateY(80px); opacity: 0;
+    transition: all .3s; max-width: 300px;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.ok { border-left: 4px solid var(--success); }
+  #toast.err { border-left: 4px solid var(--accent3); }
+  #toast.info { border-left: 4px solid var(--accent); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.7); z-index: 500;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 28px;
+    max-width: 440px; width: 90%; max-height: 90vh; overflow-y: auto;
+  }
+  .modal h2 { font-size: 1.1rem; font-weight: 800; margin-bottom: 16px; }
+
+  /* COMBUSTIVEL DISPLAY */
+  .comb-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+  .comb-badge {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 14px;
+    font-family: 'Space Mono'; font-size: 0.8rem;
+  }
+  .comb-badge span { color: var(--accent); font-weight: 700; }
+
+  /* SEMANA BARS */
+  .week-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .week-label { width: 120px; font-size: 0.75rem; color: var(--muted); }
+  .week-bar-bg { flex: 1; background: var(--surface); border-radius: 4px; height: 20px; position: relative; overflow: hidden; }
+  .week-bar { height: 100%; background: var(--accent); border-radius: 4px; transition: width .5s; }
+  .week-val { width: 80px; text-align: right; font-family: 'Space Mono'; font-size: 0.75rem; color: var(--accent); }
+
+  .section-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  
+  select[multiple] { height: auto; min-height: 80px; }
+  
+  .field-group { margin-bottom: 14px; }
+  
+  .highlight-row td { background: rgba(74,240,176,.06) !important; }
+
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--muted); font-size: 0.9rem; }
+  .empty-state .icon { font-size: 2.5rem; display: block; margin-bottom: 12px; }
+  
+  .tab-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+  
+  .filter-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .filter-row input, .filter-row select { flex: 1; min-width: 120px; max-width: 200px; }
+
+  /* DRIVE STATUS */
+
+  h1.page-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 6px; }
+  .page-subtitle { font-size: 0.82rem; color: var(--muted); margin-bottom: 20px; }
+
+  /* LOGIN */
+  #login-screen {
+    position: fixed; inset: 0; z-index: 99999;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+  }
+  #login-screen.hidden { display: none; }
+  .login-box {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 18px; padding: 44px 40px;
+    width: 100%; max-width: 380px;
+    box-shadow: 0 24px 80px rgba(0,0,0,.6);
+    animation: loginIn .4s cubic-bezier(.22,1,.36,1);
+  }
+  @keyframes loginIn {
+    from { opacity:0; transform: translateY(28px) scale(.97); }
+    to   { opacity:1; transform: translateY(0) scale(1); }
+  }
+  .login-logo {
+    font-size: 2rem; font-weight: 800; letter-spacing: -1px;
+    text-align: center; margin-bottom: 6px;
+  }
+  .login-logo span { color: var(--accent); }
+  .login-sub {
+    text-align: center; font-size: 0.78rem; color: var(--muted);
+    margin-bottom: 32px; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .login-field { margin-bottom: 16px; }
+  .login-field label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase; }
+  .login-field input {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text); padding: 13px 16px;
+    font-family: 'Space Mono', monospace; font-size: 0.9rem;
+    transition: border-color .2s;
+  }
+  .login-field input:focus { outline: none; border-color: var(--accent); }
+  .login-field input.error { border-color: var(--accent3); animation: shake .3s; }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-6px)}
+    40%{transform:translateX(6px)}
+    60%{transform:translateX(-4px)}
+    80%{transform:translateX(4px)}
+  }
+  .login-btn {
+    width: 100%; background: var(--accent); color: #0d0f14;
+    border: none; border-radius: 10px; padding: 14px;
+    font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 800;
+    cursor: pointer; margin-top: 8px;
+    transition: background .2s, transform .1s;
+  }
+  .login-btn:hover { background: #ffd060; transform: translateY(-1px); }
+  .login-btn:active { transform: translateY(0); }
+  .login-error {
+    text-align: center; font-size: 0.8rem; color: var(--accent3);
+    margin-top: 12px; min-height: 20px; font-weight: 600;
+  }
+
+  #save-indicator.drive-saving .dot { background: #4285f4; animation: pulse .6s infinite; }
+  #save-indicator.drive-saved .dot { background: #4285f4; }
+  .btn-drive { background: #4285f4; color: #fff; }
+  .btn-drive:hover { background: #5a9bf5; }
+  .drive-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink:0; }
+  .drive-dot.connected { background: var(--success); }
+  #save-indicator {
+    position: fixed; bottom: 24px; left: 24px; z-index: 9998;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 8px 14px;
+    font-size: 0.75rem; font-weight: 600;
+    opacity: 0; transform: translateY(10px);
+    transition: all .3s;
+    pointer-events: none;
+  }
+  #save-indicator.show { opacity: 1; transform: translateY(0); }
+  #save-indicator .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--muted); flex-shrink: 0;
+    transition: background .3s;
+  }
+  #save-indicator.saving .dot { background: var(--warning); animation: pulse .6s infinite; }
+  #save-indicator.saved .dot { background: var(--success); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* HISTÓRICO DE VERSÕES */
+  .version-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px; background: var(--surface); border-radius: 8px;
+    margin-bottom: 6px;
+  }
+  .version-meta { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+  /* FOTOS */
+  .photo-upload-area {
+    border: 2px dashed var(--border); border-radius: 10px;
+    padding: 18px; text-align: center; cursor: pointer;
+    transition: border-color .2s, background .2s;
+    background: var(--surface);
+  }
+  .photo-upload-area:hover { border-color: var(--accent); background: rgba(240,192,64,.04); }
+  .photo-upload-area.drag-over { border-color: var(--accent2); background: rgba(74,240,176,.06); }
+  .photo-upload-hint { font-size: 0.8rem; color: var(--muted); font-weight: 600; pointer-events: none; }
+  .photo-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+  .photo-thumb {
+    position: relative; width: 90px; height: 90px;
+    border-radius: 8px; overflow: hidden;
+    border: 1px solid var(--border); flex-shrink: 0;
+    cursor: pointer;
+  }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-thumb .remove-photo {
+    position: absolute; top: 3px; right: 3px;
+    background: rgba(0,0,0,.7); border: none; color: #fff;
+    border-radius: 50%; width: 20px; height: 20px;
+    font-size: 11px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .2s;
+  }
+  .photo-thumb:hover .remove-photo { opacity: 1; }
+
+  /* LIGHTBOX */
+  #lightbox {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.92); z-index: 9000;
+    align-items: center; justify-content: center;
+    flex-direction: column; gap: 14px;
+  }
+  #lightbox.open { display: flex; }
+  #lightbox img { max-width: 90vw; max-height: 80vh; border-radius: 10px; object-fit: contain; }
+  #lightbox-caption { font-size: 0.8rem; color: var(--muted); }
+  #lightbox-close {
+    position: absolute; top: 20px; right: 24px;
+    background: none; border: none; color: #fff;
+    font-size: 1.8rem; cursor: pointer; line-height: 1;
+  }
+  #lightbox-nav {
+    display: flex; gap: 16px;
+  }
+  #lightbox-nav button {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 8px 18px;
+    font-size: 1.2rem; cursor: pointer;
+  }</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">🚚 <span>ROTAS</span>DAN</div>
+    <div class="login-sub">Sistema de Controle de Entregas</div>
+    <div class="login-field">
+      <label>Usuário</label>
+      <input type="text" id="login-user" placeholder="seu usuário" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input type="password" id="login-pass" placeholder="••••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Entrar →</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<header>
+  <div class="logo">🚚 <span>ROTAS</span>DAN</div>
+  <div class="header-btns">
+    <button class="btn btn-ghost btn-sm" onclick="exportBackup()">💾 Backup</button>
+    <button class="btn btn-ghost btn-sm" onclick="document.getElementById('restoreInput').click()">📂 Restaurar</button>
+    <button class="btn btn-ghost btn-sm" onclick="openVersions()">🕐 Versões</button>
+    <button class="btn btn-drive btn-sm" id="header_drive_btn" onclick="saveToDrive()" style="display:none">☁️ Drive</button>
+    <input type="file" id="restoreInput" accept=".json" style="display:none" onchange="restoreBackup(this)">
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="showTab('cadastro',this)">📝 Cadastrar</button>
+  <button onclick="showTab('historico',this)">📋 Histórico</button>
+  <button onclick="showTab('buscar',this)">🔍 Buscar</button>
+  <button onclick="showTab('relatorio',this)">📊 Relatório</button>
+  <button onclick="showTab('calc',this)">🧮 Calc. Rota</button>
+  <button onclick="showTab('config',this)">⚙️ Config</button>
+</nav>
+
+<main>
+
+<!-- ===== CADASTRAR ===== -->
+<div id="tab-cadastro" class="tab-content active">
+  <h1 class="page-title">Nova Rota</h1>
+  <p class="page-subtitle">Registre os dados da rota realizada</p>
+
+  <div class="card">
+    <div class="card-title">🛣️ Dados da Rota</div>
+    <div class="grid3" style="margin-bottom:14px">
+      <div class="field-group">
+        <label>📅 Data</label>
+        <input type="date" id="c_data">
+      </div>
+      <div class="field-group">
+        <label>🏢 Plataforma</label>
+        <select id="c_plataforma" onchange="updateModalidades()">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>🏷️ Modalidade</label>
+        <select id="c_modalidade">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid2" style="margin-bottom:14px">
+      <div class="field-group">
+        <label>🗺️ Rota (ID / Região)</label>
+        <input type="text" id="c_rota" placeholder="Ex: E13 - Serpa - Caieiras">
+      </div>
+      <div class="field-group">
+        <label>🧾 AT / NF / OS</label>
+        <input type="text" id="c_at" placeholder="AT2026...">
+      </div>
+    </div>
+    <div class="grid4" style="margin-bottom:14px">
+      <div class="field-group">
+        <label>⭐ Avaliação (1-5)</label>
+        <input type="number" id="c_aval" min="1" max="5" step="0.5" placeholder="4">
+      </div>
+      <div class="field-group">
+        <label>📦 Pacotes</label>
+        <input type="number" id="c_pacotes" min="0" placeholder="0" oninput="calcCustos()">
+      </div>
+      <div class="field-group">
+        <label>📬 Entregues</label>
+        <input type="number" id="c_entregues" min="0" placeholder="0" oninput="calcCustos()">
+      </div>
+      <div class="field-group">
+        <label>🛣️ Percurso (km)</label>
+        <input type="number" id="c_km" min="0" step="0.1" placeholder="0" oninput="calcCustos()">
+      </div>
+    </div>
+    <div class="grid2" style="margin-bottom:14px">
+      <div class="field-group">
+        <label>⏱️ Duração (HH:MM)</label>
+        <input type="text" id="c_duracao" placeholder="04:30">
+      </div>
+      <div class="field-group">
+        <label>💰 Valor da Rota (R$)</label>
+        <input type="number" id="c_valor" min="0" step="0.01" placeholder="0.00" oninput="calcCustos()">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📉 Custos</div>
+    <div class="grid3" style="margin-bottom:14px">
+      <div class="field-group">
+        <label>💪 Ajudante (R$)</label>
+        <input type="number" id="c_ajudante" min="0" step="0.01" placeholder="0.00" oninput="calcCustos()">
+      </div>
+      <div class="field-group">
+        <label>🍽️ Alimentação (R$)</label>
+        <input type="number" id="c_alim" min="0" step="0.01" placeholder="0.00" oninput="calcCustos()">
+      </div>
+      <div class="field-group">
+        <label>⛽ Combustível (auto)</label>
+        <input type="text" id="c_comb_display" readonly style="color:var(--accent); font-weight:700">
+      </div>
+    </div>
+    <div class="comb-row">
+      <div class="comb-badge">Autonomia: <span id="disp_auto">—</span> km/L</div>
+      <div class="comb-badge">Preço: R$<span id="disp_preco">—</span>/L</div>
+      <div class="comb-badge">Custo Total: R$<span id="disp_custo_total">—</span></div>
+      <div class="comb-badge">Líquido: R$<span id="disp_liquido" style="color:var(--accent2)">—</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📝 Anotações & Fotos</div>
+    <textarea id="c_obs" placeholder="Observações, ocorrências..." style="margin-bottom:12px"></textarea>
+    <div class="photo-upload-area" id="c_photo_area" onclick="document.getElementById('c_photo_input').click()" ondragover="event.preventDefault()" ondrop="handlePhotoDrop(event,'c')">
+      <input type="file" id="c_photo_input" accept="image/*" multiple style="display:none" onchange="handlePhotoSelect(this,'c')">
+      <div class="photo-upload-hint">📷 Clique ou arraste fotos aqui</div>
+    </div>
+    <div class="photo-grid" id="c_photo_grid"></div>
+  </div>
+
+  <div style="display:flex; gap:10px; flex-wrap:wrap">
+    <button class="btn btn-accent" onclick="salvarRota()">💾 Gravar Rota</button>
+    <button class="btn btn-ghost" onclick="limparCadastro()">✖️ Limpar</button>
+  </div>
+</div>
+
+<!-- ===== HISTÓRICO ===== -->
+<div id="tab-historico" class="tab-content">
+  <div class="tab-actions">
+    <div>
+      <h1 class="page-title">Histórico de Rotas</h1>
+      <p class="page-subtitle" id="hist_count">0 registros</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📥 CSV</button>
+      <button class="btn btn-danger btn-sm" onclick="clearAll()">🗑️ Limpar Tudo</button>
+    </div>
+  </div>
+  <div class="filter-row">
+    <select id="hist_filtro_plat" onchange="renderHistorico()">
+      <option value="">Todas plataformas</option>
+    </select>
+    <input type="month" id="hist_filtro_mes" onchange="renderHistorico()">
+    <input type="text" id="hist_search" placeholder="🔍 Busca rápida..." oninput="renderHistorico()" style="max-width:200px">
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th><th>Plataforma</th><th>Modalidade</th><th>Rota</th>
+          <th>AT/OS</th><th>Pcts</th><th>Km</th><th>Valor</th><th>Líquido</th><th>⭐</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="hist_tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== BUSCAR ===== -->
+<div id="tab-buscar" class="tab-content">
+  <h1 class="page-title">Buscar Registro</h1>
+  <p class="page-subtitle">Busque por AT/NF/OS e edite o registro</p>
+  <div class="card">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+      <div style="flex:1">
+        <label>🧾 AT / NF / OS</label>
+        <input type="text" id="b_at" placeholder="AT2026...">
+      </div>
+      <button class="btn btn-accent" onclick="buscarAT()">🔍 Buscar</button>
+      <button class="btn btn-ghost" onclick="limparBusca()">✖️ Limpar</button>
+    </div>
+  </div>
+
+  <div id="busca_resultado" style="display:none">
+    <div class="card">
+      <div class="card-title">✏️ Editar Registro</div>
+      <div class="grid3" style="margin-bottom:14px">
+        <div class="field-group"><label>📅 Data</label><input type="date" id="e_data"></div>
+        <div class="field-group"><label>🏢 Plataforma</label><select id="e_plataforma" onchange="updateEditModalidades()"></select></div>
+        <div class="field-group"><label>🏷️ Modalidade</label><select id="e_modalidade"></select></div>
+      </div>
+      <div class="grid2" style="margin-bottom:14px">
+        <div class="field-group"><label>🗺️ Rota</label><input type="text" id="e_rota"></div>
+        <div class="field-group"><label>🧾 AT/NF/OS</label><input type="text" id="e_at"></div>
+      </div>
+      <div class="grid4" style="margin-bottom:14px">
+        <div class="field-group"><label>⭐ Avaliação</label><input type="number" id="e_aval" min="1" max="5" step="0.5"></div>
+        <div class="field-group"><label>📦 Pacotes</label><input type="number" id="e_pacotes" min="0"></div>
+        <div class="field-group"><label>📬 Entregues</label><input type="number" id="e_entregues" min="0"></div>
+        <div class="field-group"><label>🛣️ Km</label><input type="number" id="e_km" min="0" step="0.1"></div>
+      </div>
+      <div class="grid3" style="margin-bottom:14px">
+        <div class="field-group"><label>⏱️ Duração</label><input type="text" id="e_duracao"></div>
+        <div class="field-group"><label>💰 Valor (R$)</label><input type="number" id="e_valor" step="0.01"></div>
+        <div class="field-group"><label>💪 Ajudante (R$)</label><input type="number" id="e_ajudante" step="0.01"></div>
+      </div>
+      <div class="grid2" style="margin-bottom:14px">
+        <div class="field-group"><label>🍽️ Alimentação (R$)</label><input type="number" id="e_alim" step="0.01"></div>
+        <div class="field-group"><label>📝 Anotações</label><textarea id="e_obs" rows="2"></textarea></div>
+      </div>
+      <div class="field-group" style="margin-bottom:14px">
+        <label>📷 Fotos</label>
+        <div class="photo-upload-area" id="e_photo_area" onclick="document.getElementById('e_photo_input').click()" ondragover="event.preventDefault()" ondrop="handlePhotoDrop(event,'e')">
+          <input type="file" id="e_photo_input" accept="image/*" multiple style="display:none" onchange="handlePhotoSelect(this,'e')">
+          <div class="photo-upload-hint">📷 Clique ou arraste fotos aqui</div>
+        </div>
+        <div class="photo-grid" id="e_photo_grid"></div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-accent" onclick="salvarEdicao()">💾 Salvar Alterações</button>
+        <button class="btn btn-danger" onclick="excluirRegistro()">🗑️ Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RELATÓRIO ===== -->
+<div id="tab-relatorio" class="tab-content">
+  <div class="tab-actions">
+    <div>
+      <h1 class="page-title">Relatório Mensal</h1>
+      <p class="page-subtitle">Resumo financeiro e operacional</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="month" id="rel_mes" onchange="renderRelatorio()" style="width:160px">
+    </div>
+  </div>
+
+  <div class="stats-row" id="rel_stats"></div>
+
+  <div class="grid2">
+    <div class="card rel-section">
+      <h3>💰 Financeiro</h3>
+      <div id="rel_financeiro"></div>
+    </div>
+    <div class="card rel-section">
+      <h3>📈 Operacional</h3>
+      <div id="rel_operacional"></div>
+    </div>
+  </div>
+
+  <div class="card rel-section">
+    <h3>📅 Por Semana</h3>
+    <div id="rel_semanas"></div>
+  </div>
+
+  <div class="card rel-section">
+    <h3>🏆 Destaques</h3>
+    <div class="grid2" id="rel_destaques"></div>
+  </div>
+
+  <div class="card rel-section">
+    <h3>📋 Rotas do Mês</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Data</th><th>Rota</th><th>Pcts</th><th>Km</th><th>Duração</th><th>Valor</th><th>Líquido</th></tr></thead>
+        <tbody id="rel_tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CALC ROTA ===== -->
+<div id="tab-calc" class="tab-content">
+  <h1 class="page-title">Calculadora de Rota</h1>
+  <p class="page-subtitle">Simule a viabilidade de uma rota antes de aceitar</p>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-title">📊 Parâmetros</div>
+        <div class="grid2">
+          <div class="field-group"><label>💰 Valor da Rota (R$)</label><input type="number" id="calc_valor" placeholder="250" oninput="calcRota()"></div>
+          <div class="field-group"><label>🚗 Dist. até carregamento (km)</label><input type="number" id="calc_dist_carg" placeholder="37" oninput="calcRota()"></div>
+          <div class="field-group"><label>📏 Tamanho da Rota (km)</label><input type="number" id="calc_dist_rota" placeholder="55" oninput="calcRota()"></div>
+          <div class="field-group"><label>⏱️ Tempo (horas)</label><input type="number" id="calc_tempo" placeholder="4" step="0.5" oninput="calcRota()"></div>
+          <div class="field-group"><label>⛽ Consumo (km/L)</label><input type="number" id="calc_consumo" step="0.1" oninput="calcRota()"></div>
+          <div class="field-group"><label>💧 Preço combustível (R$/L)</label><input type="number" id="calc_preco_comb" step="0.01" oninput="calcRota()"></div>
+          <div class="field-group"><label>🎯 Mínimo desejado /hora</label><input type="number" id="calc_minimo" placeholder="40" oninput="calcRota()"></div>
+          <div class="field-group"><label>📦 Qtd Pacotes</label><input type="number" id="calc_pacotes" placeholder="60" oninput="calcRota()"></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="calc-result" id="calc_result_card">
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;letter-spacing:2px">RESULTADO</div>
+        <div class="calc-big" id="calc_por_hora">R$ —</div>
+        <div class="calc-sub">por hora de rota</div>
+        <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left">
+          <div class="comb-badge">⛽ Comb: R$<span id="c2_comb">—</span></div>
+          <div class="comb-badge">💧 Líquido: R$<span id="c2_liq">—</span></div>
+          <div class="comb-badge">📅 /dia: R$<span id="c2_dia">—</span></div>
+          <div class="comb-badge">📦 /pct: R$<span id="c2_pct">—</span></div>
+        </div>
+        <div id="calc_veredito" style="margin-top:16px;font-size:1.2rem;font-weight:800"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">📅 Projeção Mensal</div>
+        <div class="grid2">
+          <div class="field-group"><label>Dias no mês</label><input type="number" id="calc_dias_mes" placeholder="24" oninput="calcRota()"></div>
+          <div class="field-group"><label>Rotas/dia</label><input type="number" id="calc_rotas_dia" value="1" oninput="calcRota()"></div>
+        </div>
+        <div style="margin-top:12px">
+          <div class="rel-item"><span class="rel-item-label">Bruto/mês</span><span class="rel-item-val yellow" id="c2_bruto_mes">—</span></div>
+          <div class="rel-item" style="margin-top:6px"><span class="rel-item-label">Combustível/mês</span><span class="rel-item-val red" id="c2_comb_mes">—</span></div>
+          <div class="rel-item" style="margin-top:6px"><span class="rel-item-label">Líquido/mês</span><span class="rel-item-val green" id="c2_liq_mes">—</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CONFIG ===== -->
+<div id="tab-config" class="tab-content">
+  <h1 class="page-title">Configurações</h1>
+  <p class="page-subtitle">Ajuste os parâmetros do sistema</p>
+
+  <div class="card">
+    <div class="card-title">⛽ Combustível</div>
+    <div class="grid2">
+      <div class="field-group"><label>Autonomia do veículo (km/L)</label><input type="number" id="cfg_autonomia" step="0.1" placeholder="8.7"></div>
+      <div class="field-group"><label>Preço do Combustível (R$/L)</label><input type="number" id="cfg_preco_comb" step="0.01" placeholder="6.29"></div>
+    </div>
+    <button class="btn btn-accent btn-sm" onclick="salvarConfig()" style="margin-top:10px">💾 Salvar</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🏢 Plataformas e Modalidades</div>
+    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:12px">Gerencie as opções dos menus de cadastro</p>
+    <div class="grid2">
+      <div>
+        <div class="field-group">
+          <label>Plataformas (uma por linha)</label>
+          <textarea id="cfg_plataformas" rows="6"></textarea>
+        </div>
+      </div>
+      <div>
+        <div class="field-group">
+          <label>Modalidades — formato: Plataforma|Modalidade (uma por linha)</label>
+          <textarea id="cfg_modalidades" rows="6"></textarea>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-accent btn-sm" onclick="salvarConfigMenus()" style="margin-top:10px">💾 Salvar Menus</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">☁️ Google Drive</div>
+
+    <div id="drive_setup_panel">
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:14px">Cole seu <strong style="color:var(--text)">Google Client ID</strong> abaixo para ativar o salvamento no Drive. O Client ID é gerado gratuitamente no Google Cloud Console.</p>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">
+        <div style="font-size:0.75rem;font-weight:700;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Como obter o Client ID</div>
+        <ol style="font-size:0.78rem;color:var(--muted);line-height:2.2;padding-left:16px">
+          <li>Acesse <a href="https://console.cloud.google.com" target="_blank" style="color:var(--accent2)">console.cloud.google.com</a></li>
+          <li>Crie um projeto → <strong style="color:var(--text)">APIs e Serviços → Credenciais</strong></li>
+          <li><strong style="color:var(--text)">Criar credenciais → ID do cliente OAuth 2.0</strong></li>
+          <li>Tipo: <strong style="color:var(--text)">Aplicativo da Web</strong></li>
+          <li>Em "Origens JS autorizadas" cole a URL do seu GitHub Pages</li>
+          <li>Copie o Client ID gerado e cole abaixo 👇</li>
+        </ol>
+      </div>
+      <div class="field-group">
+        <label>🔑 Google Client ID</label>
+        <input type="text" id="drive_client_id" placeholder="000000000000-xxxxxxxx.apps.googleusercontent.com" style="font-family:Space Mono;font-size:0.76rem">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn btn-drive" onclick="connectDrive()">🔑 Conectar ao Drive</button>
+        <button class="btn btn-ghost btn-sm" onclick="saveDriveClientId()">💾 Salvar Client ID</button>
+      </div>
+    </div>
+
+    <div id="drive_connected_panel" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <div class="drive-dot connected"></div>
+        <span style="font-size:0.85rem;font-weight:600" id="drive_user_info">Conectado</span>
+        <button class="btn btn-ghost btn-sm" onclick="disconnectDrive()">Desconectar</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-drive" onclick="saveToDriveNow()">☁️ Salvar agora</button>
+        <button class="btn btn-ghost" onclick="loadFromDrive()">📂 Carregar backups</button>
+      </div>
+      <div id="drive_files_list" style="margin-top:16px"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🕐 Histórico de Versões</div>
+    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:14px">O sistema salva automaticamente as últimas <strong style="color:var(--text)">10 versões</strong> a cada alteração. Você pode restaurar qualquer versão anterior.</p>
+    <button class="btn btn-ghost" onclick="openVersions()">🕐 Ver Histórico de Versões</button>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-accent" onclick="exportBackup()">📥 Exportar Backup (.json)</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('restoreInput').click()">📂 Restaurar Backup</button>
+      <button class="btn btn-ghost" onclick="exportCSV()">📊 Exportar CSV</button>
+      <button class="btn btn-danger" onclick="clearAll()">🗑️ Limpar Todos os Dados</button>
+    </div>
+    <div style="margin-top:12px;font-size:0.8rem;color:var(--muted)" id="data_info"></div>
+  </div>
+</div>
+
+</main>
+
+<!-- MODAL EDIÇÃO INLINE -->
+<div class="modal-overlay" id="modal_overlay">
+  <div class="modal">
+    <h2>✏️ Editar Rota</h2>
+    <div id="modal_content"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-accent" onclick="salvarModalEdit()">💾 Salvar</button>
+      <button class="btn btn-danger btn-sm" onclick="excluirModalEdit()">🗑️ Excluir</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="">
+  <div id="lightbox-caption"></div>
+  <div id="lightbox-nav">
+    <button onclick="lightboxNav(-1)">‹</button>
+    <button onclick="lightboxNav(1)">›</button>
+  </div>
+</div>
+
+<div id="save-indicator"><div class="dot"></div><span id="save-indicator-text">Salvando...</span></div>
+
+<div id="toast"></div>
+
+<!-- MODAL VERSÕES -->
+<div class="modal-overlay" id="versions_overlay">
+  <div class="modal" style="max-width:520px">
+    <h2>🕐 Histórico de Versões</h2>
+    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:16px">Últimas 10 versões salvas automaticamente. Clique em Restaurar para voltar a uma versão anterior.</p>
+    <div id="versions_list"></div>
+    <div style="margin-top:16px">
+      <button class="btn btn-ghost" onclick="document.getElementById('versions_overlay').classList.remove('open')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STATE & STORAGE
+// ============================================================
+let DB = {
+  rotas: [],
+  config: { autonomia: 8.7, preco_comb: 6.29 },
+  plataformas: ['Shopee', 'Mercado Livre', 'Outros'],
+  modalidades: [
+    'Shopee|Lapa Expresso', 'Shopee|Lapa (Frota)', 'Shopee|Vázea Paulista (Frota)',
+    'Shopee|Guarulhos Expresso', 'Shopee|Mooca Expresso', 'Shopee|Reembolso/Incentivo',
+    'Mercado Livre|Atibaia', 'Mercado Livre|Zona Oeste (Lapa)',
+    'Outros|Transportadora'
+  ]
+};
+
+let editingIndex = -1;
+
+// ============================================================
+// SAVE INDICATOR
+// ============================================================
+let _saveIndTimer;
+function showSaveIndicator(state, text) {
+  const el = document.getElementById('save-indicator');
+  const tx = document.getElementById('save-indicator-text');
+  el.className = 'show ' + state;
+  tx.textContent = text;
+  clearTimeout(_saveIndTimer);
+  if (state === 'saved') {
+    _saveIndTimer = setTimeout(() => { el.className = ''; }, 2500);
+  }
+}
+
+// ============================================================
+// VERSION HISTORY (last 10 snapshots in localStorage)
+// ============================================================
+const VERSION_KEY = 'rotasdan_versions';
+const MAX_VERSIONS = 10;
+
+function saveVersion(label) {
+  let versions = [];
+  try { versions = JSON.parse(localStorage.getItem(VERSION_KEY) || '[]'); } catch(e) {}
+  versions.unshift({
+    ts: Date.now(),
+    label: label || 'Automático',
+    rotas: DB.rotas.length,
+    snapshot: JSON.stringify(DB)
+  });
+  if (versions.length > MAX_VERSIONS) versions = versions.slice(0, MAX_VERSIONS);
+  localStorage.setItem(VERSION_KEY, JSON.stringify(versions));
+}
+
+function openVersions() {
+  let versions = [];
+  try { versions = JSON.parse(localStorage.getItem(VERSION_KEY) || '[]'); } catch(e) {}
+  const el = document.getElementById('versions_list');
+  if (!versions.length) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;text-align:center;padding:24px">Nenhuma versão salva ainda</p>';
+  } else {
+    el.innerHTML = versions.map((v, i) => `
+      <div class="version-item">
+        <div>
+          <div style="font-size:0.82rem;font-weight:600">${v.label} — ${v.rotas} registro(s)</div>
+          <div class="version-meta">${new Date(v.ts).toLocaleString('pt-BR')}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="restoreVersion(${i})">↩️ Restaurar</button>
+      </div>
+    `).join('');
+  }
+  document.getElementById('versions_overlay').classList.add('open');
+}
+
+function restoreVersion(index) {
+  let versions = [];
+  try { versions = JSON.parse(localStorage.getItem(VERSION_KEY) || '[]'); } catch(e) {}
+  const v = versions[index];
+  if (!v) return;
+  if (!confirm(`Restaurar versão de ${new Date(v.ts).toLocaleString('pt-BR')} com ${v.rotas} registros?\nOs dados atuais serão substituídos.`)) return;
+  try {
+    const data = JSON.parse(v.snapshot);
+    DB = { ...DB, ...data };
+    save(false); // save without creating new version
+    populateSelects();
+    document.getElementById('versions_overlay').classList.remove('open');
+    toast(`Versão restaurada! ${DB.rotas.length} registros ✅`, 'ok');
+    updateDataInfo();
+  } catch(e) {
+    toast('Erro ao restaurar versão', 'err');
+  }
+}
+
+// ============================================================
+// SAVE (localStorage + indicator + version + drive debounce)
+// ============================================================
+function save(createVersion = true) {
+  showSaveIndicator('saving', 'Salvando...');
+  localStorage.setItem('rotasdan_db', JSON.stringify(DB));
+
+  if (createVersion) saveVersion('Automático');
+
+  setTimeout(() => showSaveIndicator('saved', '✓ Salvo localmente'), 120);
+  scheduleDriveAutosave();
+}
+
+function load() {
+  const raw = localStorage.getItem('rotasdan_db');
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      DB = { ...DB, ...parsed };
+    } catch(e) {}
+  }
+}
+
+
+
+// ============================================================
+// TABS
+// ============================================================
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'historico') renderHistorico();
+  if (id === 'relatorio') renderRelatorio();
+  if (id === 'config') renderConfig();
+  if (id === 'buscar') populateEditSelects();
+}
+
+// ============================================================
+// MENUS DINÂMICOS
+// ============================================================
+function populateSelects() {
+  const pSel = document.getElementById('c_plataforma');
+  const hSel = document.getElementById('hist_filtro_plat');
+  [pSel, hSel].forEach(s => {
+    const cur = s.value;
+    const isHist = s === hSel;
+    s.innerHTML = isHist ? '<option value="">Todas plataformas</option>' : '<option value="">Selecione...</option>';
+    DB.plataformas.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p; o.textContent = p;
+      if (p === cur) o.selected = true;
+      s.appendChild(o);
+    });
+  });
+}
+
+function updateModalidades() {
+  const plat = document.getElementById('c_plataforma').value;
+  const sel = document.getElementById('c_modalidade');
+  sel.innerHTML = '<option value="">Selecione...</option>';
+  DB.modalidades
+    .filter(m => m.startsWith(plat + '|'))
+    .map(m => m.split('|')[1])
+    .forEach(m => {
+      const o = document.createElement('option');
+      o.value = m; o.textContent = m;
+      sel.appendChild(o);
+    });
+}
+
+function populateEditSelects() {
+  const sel = document.getElementById('e_plataforma');
+  sel.innerHTML = '<option value="">Selecione...</option>';
+  DB.plataformas.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p; o.textContent = p;
+    sel.appendChild(o);
+  });
+}
+
+function updateEditModalidades() {
+  const plat = document.getElementById('e_plataforma').value;
+  const sel = document.getElementById('e_modalidade');
+  sel.innerHTML = '<option value="">Selecione...</option>';
+  DB.modalidades
+    .filter(m => m.startsWith(plat + '|'))
+    .map(m => m.split('|')[1])
+    .forEach(m => {
+      const o = document.createElement('option');
+      o.value = m; o.textContent = m;
+      sel.appendChild(o);
+    });
+}
+
+// ============================================================
+// CÁLCULO COMBUSTÍVEL
+// ============================================================
+function calcCustos() {
+  const km = parseFloat(document.getElementById('c_km').value) || 0;
+  const auto = DB.config.autonomia;
+  const preco = DB.config.preco_comb;
+  const comb = km > 0 ? (km / auto) * preco : 0;
+  const valor = parseFloat(document.getElementById('c_valor').value) || 0;
+  const ajudante = parseFloat(document.getElementById('c_ajudante').value) || 0;
+  const alim = parseFloat(document.getElementById('c_alim').value) || 0;
+  const total_custo = comb + ajudante + alim;
+  const liquido = valor - total_custo;
+
+  document.getElementById('c_comb_display').value = 'R$ ' + comb.toFixed(2);
+  document.getElementById('disp_auto').textContent = auto;
+  document.getElementById('disp_preco').textContent = preco.toFixed(2);
+  document.getElementById('disp_custo_total').textContent = total_custo.toFixed(2);
+  document.getElementById('disp_liquido').textContent = liquido.toFixed(2);
+}
+
+// ============================================================
+// SALVAR ROTA
+// ============================================================
+function salvarRota() {
+  const data = document.getElementById('c_data').value;
+  const plataforma = document.getElementById('c_plataforma').value;
+  const modalidade = document.getElementById('c_modalidade').value;
+  const rota = document.getElementById('c_rota').value.trim();
+  const at = document.getElementById('c_at').value.trim();
+  if (!data) { toast('Informe a data!', 'err'); return; }
+  if (!plataforma) { toast('Selecione a plataforma!', 'err'); return; }
+
+  const km = parseFloat(document.getElementById('c_km').value) || 0;
+  const auto = DB.config.autonomia;
+  const preco = DB.config.preco_comb;
+  const comb = km > 0 ? (km / auto) * preco : 0;
+  const valor = parseFloat(document.getElementById('c_valor').value) || 0;
+  const ajudante = parseFloat(document.getElementById('c_ajudante').value) || 0;
+  const alim = parseFloat(document.getElementById('c_alim').value) || 0;
+  const total_custo = comb + ajudante + alim;
+  const liquido = valor - total_custo;
+
+  const reg = {
+    id: Date.now(),
+    data, plataforma, modalidade, rota, at,
+    aval: parseFloat(document.getElementById('c_aval').value) || 0,
+    pacotes: parseInt(document.getElementById('c_pacotes').value) || 0,
+    entregues: parseInt(document.getElementById('c_entregues').value) || 0,
+    km,
+    duracao: document.getElementById('c_duracao').value.trim(),
+    valor,
+    ajudante,
+    alim,
+    comb: parseFloat(comb.toFixed(6)),
+    total_custo: parseFloat(total_custo.toFixed(6)),
+    liquido: parseFloat(liquido.toFixed(6)),
+    obs: document.getElementById('c_obs').value.trim(),
+    fotos: [..._pendingPhotos]
+  };
+
+  DB.rotas.unshift(reg);
+  save();
+  toast('Rota gravada com sucesso! ✅', 'ok');
+  limparCadastro();
+  updateDataInfo();
+}
+
+function limparCadastro() {
+  ['c_data','c_plataforma','c_modalidade','c_rota','c_at','c_aval','c_pacotes','c_entregues','c_km','c_duracao','c_valor','c_ajudante','c_alim','c_obs','c_comb_display'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('disp_auto').textContent = DB.config.autonomia;
+  document.getElementById('disp_preco').textContent = DB.config.preco_comb;
+  document.getElementById('disp_custo_total').textContent = '—';
+  document.getElementById('disp_liquido').textContent = '—';
+  _pendingPhotos = [];
+  renderPhotoGrid('c', []);
+}
+
+// ============================================================
+// HISTÓRICO
+// ============================================================
+function renderHistorico() {
+  const plat = document.getElementById('hist_filtro_plat').value;
+  const mes = document.getElementById('hist_filtro_mes').value;
+  const search = (document.getElementById('hist_search').value || '').toLowerCase();
+  
+  let lista = DB.rotas.filter(r => {
+    if (plat && r.plataforma !== plat) return false;
+    if (mes && !r.data.startsWith(mes)) return false;
+    if (search && !JSON.stringify(r).toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  document.getElementById('hist_count').textContent = lista.length + ' registro(s)';
+
+  const tbody = document.getElementById('hist_tbody');
+  if (lista.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="11" class="empty-state"><span class="icon">📭</span>Nenhum registro encontrado</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = lista.map((r, i) => `
+    <tr>
+      <td style="font-family:Space Mono;font-size:0.78rem">${r.data}</td>
+      <td><span class="badge badge-${r.plataforma === 'Shopee' ? 'shopee' : r.plataforma === 'Mercado Livre' ? 'ml' : 'outros'}">${r.plataforma}</span></td>
+      <td style="font-size:0.78rem">${r.modalidade || '—'}</td>
+      <td style="font-size:0.78rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.rota || '—'}</td>
+      <td style="font-family:Space Mono;font-size:0.75rem">${r.at || '—'}</td>
+      <td style="font-family:Space Mono">${r.entregues || 0}/${r.pacotes || 0}</td>
+      <td style="font-family:Space Mono">${r.km || 0}</td>
+      <td style="font-family:Space Mono;color:var(--accent)">R$ ${(r.valor||0).toFixed(2)}</td>
+      <td style="font-family:Space Mono;color:var(--accent2)">R$ ${(r.liquido||0).toFixed(2)}</td>
+      <td>${renderStars(r.aval)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openEditModal(${r.id})">✏️</button></td>
+    </tr>
+  `).join('');
+}
+
+function renderStars(n) {
+  if (!n) return '—';
+  return '★'.repeat(Math.floor(n)) + (n % 1 ? '½' : '') + '<span style="color:var(--border)">' + '★'.repeat(5-Math.ceil(n)) + '</span>';
+}
+
+// ============================================================
+// BUSCAR / EDITAR
+// ============================================================
+function buscarAT() {
+  const at = document.getElementById('b_at').value.trim();
+  if (!at) { toast('Informe o AT/NF/OS', 'err'); return; }
+  const idx = DB.rotas.findIndex(r => r.at && r.at.toLowerCase() === at.toLowerCase());
+  if (idx < 0) { toast('Registro não encontrado', 'err'); return; }
+  editingIndex = idx;
+  preencherEdicao(DB.rotas[idx]);
+  document.getElementById('busca_resultado').style.display = 'block';
+}
+
+function preencherEdicao(r) {
+  populateEditSelects();
+  document.getElementById('e_data').value = r.data || '';
+  document.getElementById('e_plataforma').value = r.plataforma || '';
+  updateEditModalidades();
+  setTimeout(() => { document.getElementById('e_modalidade').value = r.modalidade || ''; }, 50);
+  document.getElementById('e_rota').value = r.rota || '';
+  document.getElementById('e_at').value = r.at || '';
+  document.getElementById('e_aval').value = r.aval || '';
+  document.getElementById('e_pacotes').value = r.pacotes || '';
+  document.getElementById('e_entregues').value = r.entregues || '';
+  document.getElementById('e_km').value = r.km || '';
+  document.getElementById('e_duracao').value = r.duracao || '';
+  document.getElementById('e_valor').value = r.valor || '';
+  document.getElementById('e_ajudante').value = r.ajudante || '';
+  document.getElementById('e_alim').value = r.alim || '';
+  document.getElementById('e_obs').value = r.obs || '';
+  // Fotos
+  setTimeout(() => {
+    renderPhotoGrid('e', r.fotos || []);
+    setupDragFeedback('e');
+  }, 60);
+}
+
+function salvarEdicao() {
+  if (editingIndex < 0) return;
+  const r = DB.rotas[editingIndex];
+  r.data = document.getElementById('e_data').value;
+  r.plataforma = document.getElementById('e_plataforma').value;
+  r.modalidade = document.getElementById('e_modalidade').value;
+  r.rota = document.getElementById('e_rota').value;
+  r.at = document.getElementById('e_at').value;
+  r.aval = parseFloat(document.getElementById('e_aval').value) || 0;
+  r.pacotes = parseInt(document.getElementById('e_pacotes').value) || 0;
+  r.entregues = parseInt(document.getElementById('e_entregues').value) || 0;
+  r.km = parseFloat(document.getElementById('e_km').value) || 0;
+  r.duracao = document.getElementById('e_duracao').value;
+  r.valor = parseFloat(document.getElementById('e_valor').value) || 0;
+  r.ajudante = parseFloat(document.getElementById('e_ajudante').value) || 0;
+  r.alim = parseFloat(document.getElementById('e_alim').value) || 0;
+  r.obs = document.getElementById('e_obs').value;
+  const comb = r.km > 0 ? (r.km / DB.config.autonomia) * DB.config.preco_comb : 0;
+  r.comb = parseFloat(comb.toFixed(6));
+  r.total_custo = parseFloat((r.comb + r.ajudante + r.alim).toFixed(6));
+  r.liquido = parseFloat((r.valor - r.total_custo).toFixed(6));
+  save();
+  toast('Alterações salvas! ✅', 'ok');
+  limparBusca();
+}
+
+function excluirRegistro() {
+  if (editingIndex < 0) return;
+  if (!confirm('Excluir este registro?')) return;
+  DB.rotas.splice(editingIndex, 1);
+  save();
+  toast('Registro excluído', 'info');
+  limparBusca();
+}
+
+function limparBusca() {
+  document.getElementById('b_at').value = '';
+  document.getElementById('busca_resultado').style.display = 'none';
+  editingIndex = -1;
+}
+
+// ============================================================
+// MODAL EDIT (from historico)
+// ============================================================
+let modalEditId = null;
+
+function openEditModal(id) {
+  const r = DB.rotas.find(x => x.id === id);
+  if (!r) return;
+  modalEditId = id;
+  document.getElementById('modal_overlay').classList.add('open');
+  document.getElementById('modal_content').innerHTML = `
+    <div class="grid2">
+      <div class="field-group"><label>Data</label><input type="date" id="me_data" value="${r.data||''}"></div>
+      <div class="field-group"><label>Valor (R$)</label><input type="number" id="me_valor" value="${r.valor||0}" step="0.01"></div>
+      <div class="field-group"><label>Pacotes</label><input type="number" id="me_pacotes" value="${r.pacotes||0}"></div>
+      <div class="field-group"><label>Entregues</label><input type="number" id="me_entregues" value="${r.entregues||0}"></div>
+      <div class="field-group"><label>Km</label><input type="number" id="me_km" value="${r.km||0}" step="0.1"></div>
+      <div class="field-group"><label>Duração</label><input type="text" id="me_duracao" value="${r.duracao||''}"></div>
+      <div class="field-group"><label>Ajudante (R$)</label><input type="number" id="me_ajudante" value="${r.ajudante||0}" step="0.01"></div>
+      <div class="field-group"><label>Alimentação (R$)</label><input type="number" id="me_alim" value="${r.alim||0}" step="0.01"></div>
+    </div>
+    <div class="field-group"><label>Anotações</label><textarea id="me_obs" rows="2">${r.obs||''}</textarea></div>
+    ${renderModalPhotos(r)}
+  `;
+}
+
+function salvarModalEdit() {
+  const r = DB.rotas.find(x => x.id === modalEditId);
+  if (!r) return;
+  r.data = document.getElementById('me_data').value;
+  r.valor = parseFloat(document.getElementById('me_valor').value) || 0;
+  r.pacotes = parseInt(document.getElementById('me_pacotes').value) || 0;
+  r.entregues = parseInt(document.getElementById('me_entregues').value) || 0;
+  r.km = parseFloat(document.getElementById('me_km').value) || 0;
+  r.duracao = document.getElementById('me_duracao').value;
+  r.ajudante = parseFloat(document.getElementById('me_ajudante').value) || 0;
+  r.alim = parseFloat(document.getElementById('me_alim').value) || 0;
+  r.obs = document.getElementById('me_obs').value;
+  const comb = r.km > 0 ? (r.km / DB.config.autonomia) * DB.config.preco_comb : 0;
+  r.comb = parseFloat(comb.toFixed(6));
+  r.total_custo = parseFloat((r.comb + r.ajudante + r.alim).toFixed(6));
+  r.liquido = parseFloat((r.valor - r.total_custo).toFixed(6));
+  save();
+  closeModal();
+  renderHistorico();
+  toast('Salvo! ✅', 'ok');
+}
+
+function excluirModalEdit() {
+  if (!confirm('Excluir?')) return;
+  DB.rotas = DB.rotas.filter(x => x.id !== modalEditId);
+  save();
+  closeModal();
+  renderHistorico();
+  toast('Excluído', 'info');
+}
+
+function closeModal() {
+  document.getElementById('modal_overlay').classList.remove('open');
+  modalEditId = null;
+}
+
+// ============================================================
+// RELATÓRIO
+// ============================================================
+function getWeekNumber(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const firstDay = new Date(d.getFullYear(), d.getMonth(), 1);
+  return Math.ceil((d.getDate() + firstDay.getDay()) / 7);
+}
+
+function parseDuration(dur) {
+  if (!dur) return 0;
+  const parts = dur.split(':');
+  if (parts.length === 2) return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+  if (parts.length === 3) return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+  return 0;
+}
+
+function formatDuration(mins) {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h}h ${m.toString().padStart(2,'0')}min`;
+}
+
+function renderRelatorio() {
+  const mes = document.getElementById('rel_mes').value;
+  const lista = mes ? DB.rotas.filter(r => r.data && r.data.startsWith(mes)) : DB.rotas;
+
+  const dias = new Set(lista.map(r => r.data)).size;
+  const bruto = lista.reduce((s, r) => s + (r.valor || 0), 0);
+  const liquido = lista.reduce((s, r) => s + (r.liquido || 0), 0);
+  const despesas = lista.reduce((s, r) => s + (r.total_custo || 0), 0);
+  const km = lista.reduce((s, r) => s + (r.km || 0), 0);
+  const pacotes = lista.reduce((s, r) => s + (r.entregues || 0), 0);
+  const mins = lista.reduce((s, r) => s + parseDuration(r.duracao), 0);
+
+  document.getElementById('rel_stats').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${dias}</div><div class="stat-label">Dias</div></div>
+    <div class="stat-card"><div class="stat-val">${lista.length}</div><div class="stat-label">Rotas</div></div>
+    <div class="stat-card"><div class="stat-val">${pacotes}</div><div class="stat-label">Entregues</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--success)">R$ ${liquido.toFixed(0)}</div><div class="stat-label">Líquido</div></div>
+    <div class="stat-card"><div class="stat-val">${km.toFixed(0)} km</div><div class="stat-label">Rodados</div></div>
+  `;
+
+  const combTotal = lista.reduce((s,r) => s+(r.comb||0),0);
+  const ajudTotal = lista.reduce((s,r) => s+(r.ajudante||0),0);
+  const alimentTotal = lista.reduce((s,r) => s+(r.alim||0),0);
+
+  document.getElementById('rel_financeiro').innerHTML = `
+    <div class="rel-item"><span class="rel-item-label">Receita Bruta</span><span class="rel-item-val yellow">R$ ${bruto.toFixed(2)}</span></div>
+    <div class="rel-item" style="margin-top:6px"><span class="rel-item-label">Combustível</span><span class="rel-item-val red">- R$ ${combTotal.toFixed(2)}</span></div>
+    <div class="rel-item" style="margin-top:6px"><span class="rel-item-label">Ajudante</span><span class="rel-item-val red">- R$ ${ajudTotal.toFixed(2)}</span></div>
+    <div class="rel-item" style="margin-top:6px"><span class="rel-item-label">Alimentação</span><span class="rel-item-val red">- R$ ${alimentTotal.toFixed(2)}</span></div>
+    <div class="rel-item" style="margin-top:6px"><span class="rel-item-label">Total Despesas</span><span class="rel-item-val red">- R$ ${despesas.toFixed(2)}</span></div>
+    <div class="rel-item" style="margin-top:6px;border-top:1px solid var(--border);padding-top:10px"><span class="rel-item-label">Receita Líquida</span><span class="rel-item-val green">R$ ${liquido.toFixed(2)}</span></div>
+  `;
+
+  const epH = mins > 0 ? (pacotes / (mins / 60)).toFixed(1) : '—';
+  const desempenho = lista.length > 0 ? (lista.reduce((s,r)=>s+((r.entregues||0)/(r.pacotes||1)),0)/lista.length*100).toFixed(1) : 0;
+
+  document.getElementById('rel_operacional').innerHTML = `
+    <div class="rel-item"><span class="rel-item-label">Horas Trabalhadas</span><span class="rel-item-val">${formatDuration(mins)}</span></div>
+    <div class="rel-item" style="margin-top:6px"><span class="rel-item-label">Km Percorridos</span><span class="rel-item-val">${km.toFixed(1)} km</span></div>
+    <div class="rel-item" style="margin-top:6px"><span class="rel-item-label">Entregas/hora</span><span class="rel-item-val yellow">${epH}</span></div>
+    <div class="rel-item" style="margin-top:6px"><span class="rel-item-label">Desempenho</span><span class="rel-item-val ${parseFloat(desempenho)>90?'green':'yellow'}">${desempenho}%</span></div>
+    <div class="rel-item" style="margin-top:6px"><span class="rel-item-label">Ticket médio</span><span class="rel-item-val">${lista.length>0?'R$ '+(bruto/lista.length).toFixed(2):'—'}</span></div>
+    <div class="rel-item" style="margin-top:6px"><span class="rel-item-label">Custo/km</span><span class="rel-item-val">${km>0?'R$ '+(despesas/km).toFixed(2):'—'}</span></div>
+  `;
+
+  // SEMANAS
+  const semanas = {};
+  lista.forEach(r => {
+    if (!r.data) return;
+    const w = getWeekNumber(r.data);
+    const key = `S${w}`;
+    semanas[key] = (semanas[key] || 0) + (r.valor || 0);
+  });
+  const maxSem = Math.max(...Object.values(semanas), 1);
+  let semanasHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const key = `S${i}`;
+    const val = semanas[key] || 0;
+    const pct = (val / maxSem) * 100;
+    semanasHTML += `
+      <div class="week-row">
+        <div class="week-label">${i}ª semana</div>
+        <div class="week-bar-bg"><div class="week-bar" style="width:${pct}%"></div></div>
+        <div class="week-val">R$ ${val.toFixed(0)}</div>
+      </div>`;
+  }
+  document.getElementById('rel_semanas').innerHTML = semanasHTML;
+
+  // DESTAQUES
+  const comPacotes = lista.filter(r => r.pacotes > 0);
+  const comKm = lista.filter(r => r.km > 0);
+  const comValor = lista.filter(r => r.valor > 0);
+  let destHTML = '';
+
+  if (comPacotes.length) {
+    const max = comPacotes.reduce((a,b) => (b.pacotes||0)>(a.pacotes||0)?b:a);
+    const min = comPacotes.reduce((a,b) => (b.pacotes||0)<(a.pacotes||0)?b:a);
+    destHTML += destItem('📦 Mais pacotes', max.pacotes + ' pcts', max.rota + ' | ' + max.plataforma);
+    destHTML += destItem('📦 Menos pacotes', min.pacotes + ' pcts', min.rota + ' | ' + min.plataforma);
+  }
+  if (comKm.length) {
+    const max = comKm.reduce((a,b) => (b.km||0)>(a.km||0)?b:a);
+    const min = comKm.reduce((a,b) => (b.km||0)<(a.km||0)?b:a);
+    destHTML += destItem('🛣️ Maior rota', max.km + ' km', max.rota + ' | ' + max.plataforma);
+    destHTML += destItem('🛣️ Menor rota', min.km + ' km', min.rota + ' | ' + min.plataforma);
+  }
+  if (comValor.length) {
+    const max = comValor.reduce((a,b) => (b.valor||0)>(a.valor||0)?b:a);
+    const min = comValor.reduce((a,b) => (b.valor||0)<(a.valor||0)?b:a);
+    destHTML += destItem('💰 Maior valor', 'R$ '+max.valor.toFixed(2), max.rota + ' | ' + max.plataforma);
+    destHTML += destItem('💰 Menor valor', 'R$ '+min.valor.toFixed(2), min.rota + ' | ' + min.plataforma);
+  }
+  document.getElementById('rel_destaques').innerHTML = destHTML || '<p style="color:var(--muted);font-size:0.85rem">Sem dados suficientes</p>';
+
+  // TABELA
+  const tbody = document.getElementById('rel_tbody');
+  tbody.innerHTML = lista.map(r => `
+    <tr>
+      <td style="font-family:Space Mono;font-size:0.78rem">${r.data}</td>
+      <td style="font-size:0.78rem">${r.rota || r.modalidade || '—'}</td>
+      <td style="font-family:Space Mono">${r.entregues||0}</td>
+      <td style="font-family:Space Mono">${r.km||0}</td>
+      <td style="font-family:Space Mono">${r.duracao||'—'}</td>
+      <td style="font-family:Space Mono;color:var(--accent)">R$ ${(r.valor||0).toFixed(2)}</td>
+      <td style="font-family:Space Mono;color:var(--accent2)">R$ ${(r.liquido||0).toFixed(2)}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="7" class="empty-state"><span class="icon">📊</span>Sem dados para este período</td></tr>';
+}
+
+function destItem(label, val, sub) {
+  return `<div class="rel-item" style="flex-direction:column;align-items:flex-start;gap:4px">
+    <span style="font-size:0.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px">${label}</span>
+    <span style="font-family:Space Mono;font-size:1rem;font-weight:700;color:var(--accent)">${val}</span>
+    <span style="font-size:0.72rem;color:var(--muted)">${sub}</span>
+  </div>`;
+}
+
+// ============================================================
+// CALCULADORA
+// ============================================================
+function calcRota() {
+  const valor = parseFloat(document.getElementById('calc_valor').value) || 0;
+  const distCarg = parseFloat(document.getElementById('calc_dist_carg').value) || 0;
+  const distRota = parseFloat(document.getElementById('calc_dist_rota').value) || 0;
+  const tempo = parseFloat(document.getElementById('calc_tempo').value) || 0;
+  const consumo = parseFloat(document.getElementById('calc_consumo').value) || DB.config.autonomia;
+  const precoComb = parseFloat(document.getElementById('calc_preco_comb').value) || DB.config.preco_comb;
+  const minimo = parseFloat(document.getElementById('calc_minimo').value) || 40;
+  const pacotes = parseFloat(document.getElementById('calc_pacotes').value) || 1;
+  const diasMes = parseFloat(document.getElementById('calc_dias_mes').value) || 24;
+  const rotasDia = parseFloat(document.getElementById('calc_rotas_dia').value) || 1;
+
+  const distTotal = distCarg + distRota;
+  const combLitros = distTotal / consumo;
+  const combValor = combLitros * precoComb;
+  const liquido = valor - combValor;
+  const porHora = tempo > 0 ? liquido / tempo : 0;
+  const porPct = pacotes > 0 ? valor / pacotes : 0;
+
+  document.getElementById('c2_comb').textContent = combValor.toFixed(2);
+  document.getElementById('c2_liq').textContent = liquido.toFixed(2);
+  document.getElementById('c2_dia').textContent = liquido.toFixed(2);
+  document.getElementById('c2_pct').textContent = porPct.toFixed(2);
+  document.getElementById('calc_por_hora').textContent = 'R$ ' + porHora.toFixed(2);
+
+  const veredito = document.getElementById('calc_veredito');
+  if (porHora >= minimo) {
+    veredito.textContent = '👍 VANTAJOSA!';
+    veredito.style.color = 'var(--success)';
+  } else if (porHora > 0) {
+    veredito.textContent = '⚠️ Abaixo do mínimo';
+    veredito.style.color = 'var(--warning)';
+  } else {
+    veredito.textContent = '';
+  }
+
+  const brutoMes = valor * diasMes * rotasDia;
+  const combMes = combValor * diasMes * rotasDia;
+  const liqMes = liquido * diasMes * rotasDia;
+  document.getElementById('c2_bruto_mes').textContent = 'R$ ' + brutoMes.toFixed(2);
+  document.getElementById('c2_comb_mes').textContent = 'R$ ' + combMes.toFixed(2);
+  document.getElementById('c2_liq_mes').textContent = 'R$ ' + liqMes.toFixed(2);
+}
+
+// ============================================================
+// CONFIG
+// ============================================================
+function renderConfig() {
+  document.getElementById('cfg_autonomia').value = DB.config.autonomia;
+  document.getElementById('cfg_preco_comb').value = DB.config.preco_comb;
+  document.getElementById('cfg_plataformas').value = DB.plataformas.join('\n');
+  document.getElementById('cfg_modalidades').value = DB.modalidades.join('\n');
+  if (DB.config.driveClientId) {
+    document.getElementById('drive_client_id').value = DB.config.driveClientId;
+  }
+  if (driveConnected) {
+    document.getElementById('drive_setup_panel').style.display = 'none';
+    document.getElementById('drive_connected_panel').style.display = 'block';
+  }
+  updateDataInfo();
+}
+
+function salvarConfig() {
+  DB.config.autonomia = parseFloat(document.getElementById('cfg_autonomia').value) || 8.7;
+  DB.config.preco_comb = parseFloat(document.getElementById('cfg_preco_comb').value) || 6.29;
+  save();
+  // Update calc fields
+  document.getElementById('calc_consumo').value = DB.config.autonomia;
+  document.getElementById('calc_preco_comb').value = DB.config.preco_comb;
+  toast('Configurações salvas! ✅', 'ok');
+}
+
+function salvarConfigMenus() {
+  const plats = document.getElementById('cfg_plataformas').value.split('\n').map(p=>p.trim()).filter(Boolean);
+  const mods = document.getElementById('cfg_modalidades').value.split('\n').map(m=>m.trim()).filter(Boolean);
+  DB.plataformas = plats;
+  DB.modalidades = mods;
+  save();
+  populateSelects();
+  toast('Menus atualizados! ✅', 'ok');
+}
+
+function updateDataInfo() {
+  const el = document.getElementById('data_info');
+  if (el) el.textContent = `${DB.rotas.length} rota(s) salva(s) no armazenamento local`;
+}
+
+// ============================================================
+// BACKUP / RESTORE
+// ============================================================
+function exportBackup() {
+  const json = JSON.stringify(DB, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const d = new Date().toISOString().split('T')[0];
+  a.download = `rotas_backup_${d}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Backup exportado! 📥', 'ok');
+}
+
+function restoreBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.rotas) throw new Error('Formato inválido');
+      if (!confirm(`Restaurar ${data.rotas.length} registros? Os dados atuais serão substituídos.`)) return;
+      DB = { ...DB, ...data };
+      save();
+      populateSelects();
+      toast(`Backup restaurado! ${DB.rotas.length} registros ✅`, 'ok');
+      updateDataInfo();
+    } catch(err) {
+      toast('Erro ao restaurar: ' + err.message, 'err');
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+function exportCSV() {
+  if (DB.rotas.length === 0) { toast('Nenhum dado para exportar', 'err'); return; }
+  const headers = ['Data','Plataforma','Modalidade','Rota','AT/NF/OS','Avaliação','Pacotes','Entregues','Km','Duração','Valor','Combustível','Ajudante','Alimentação','Total Custo','Líquido','Anotações'];
+  const rows = DB.rotas.map(r => [
+    r.data, r.plataforma, r.modalidade, r.rota, r.at, r.aval,
+    r.pacotes, r.entregues, r.km, r.duracao, r.valor,
+    (r.comb||0).toFixed(2), r.ajudante, r.alim, (r.total_custo||0).toFixed(2), (r.liquido||0).toFixed(2), r.obs
+  ].map(v => `"${(v||'').toString().replace(/"/g,'""')}"`));
+  const csv = [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
+  const blob = new Blob(['\uFEFF'+csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `rotas_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV exportado! 📊', 'ok');
+}
+
+function clearAll() {
+  if (!confirm('⚠️ Isso vai apagar TODOS os dados permanentemente! Confirmar?')) return;
+  if (!confirm('Tem certeza? Esta ação é IRREVERSÍVEL!')) return;
+  DB.rotas = [];
+  save();
+  renderHistorico();
+  toast('Dados apagados', 'info');
+  updateDataInfo();
+}
+
+
+
+// ============================================================
+// FOTOS
+// ============================================================
+// Photos stored as base64 in each registro: r.fotos = [ {data, name} ]
+// Current pending photos for cadastro form
+let _pendingPhotos = []; // { data, name }
+
+function handlePhotoSelect(input, prefix) {
+  const files = Array.from(input.files);
+  files.forEach(f => readPhotoFile(f, prefix));
+  input.value = '';
+}
+
+function handlePhotoDrop(event, prefix) {
+  event.preventDefault();
+  const area = document.getElementById(prefix + '_photo_area');
+  area.classList.remove('drag-over');
+  const files = Array.from(event.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  files.forEach(f => readPhotoFile(f, prefix));
+}
+
+// Add dragover/dragleave visual feedback
+document.addEventListener('DOMContentLoaded', () => {});
+function setupDragFeedback(prefix) {
+  const area = document.getElementById(prefix + '_photo_area');
+  if (!area) return;
+  area.addEventListener('dragover', () => area.classList.add('drag-over'));
+  area.addEventListener('dragleave', () => area.classList.remove('drag-over'));
+}
+
+function readPhotoFile(file, prefix) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const photo = { data: e.target.result, name: file.name };
+    if (prefix === 'c') {
+      _pendingPhotos.push(photo);
+      renderPhotoGrid('c', _pendingPhotos);
+    } else if (prefix === 'e') {
+      const r = DB.rotas[editingIndex];
+      if (!r) return;
+      if (!r.fotos) r.fotos = [];
+      r.fotos.push(photo);
+      save();
+      renderPhotoGrid('e', r.fotos);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderPhotoGrid(prefix, fotos) {
+  const grid = document.getElementById(prefix + '_photo_grid');
+  if (!grid) return;
+  if (!fotos || fotos.length === 0) { grid.innerHTML = ''; return; }
+  grid.innerHTML = fotos.map((f, i) => `
+    <div class="photo-thumb">
+      <img src="${f.data}" alt="${f.name}" onclick="openLightbox(${JSON.stringify(fotos).replace(/"/g,'&quot;')}, ${i})">
+      <button class="remove-photo" onclick="removePhoto('${prefix}',${i})" title="Remover">✕</button>
+    </div>
+  `).join('');
+}
+
+function removePhoto(prefix, index) {
+  if (prefix === 'c') {
+    _pendingPhotos.splice(index, 1);
+    renderPhotoGrid('c', _pendingPhotos);
+  } else if (prefix === 'e') {
+    const r = DB.rotas[editingIndex];
+    if (!r || !r.fotos) return;
+    r.fotos.splice(index, 1);
+    save();
+    renderPhotoGrid('e', r.fotos);
+  }
+}
+
+// Modal edit photos (inline)
+function renderModalPhotos(r) {
+  const existing = r.fotos || [];
+  return `
+    <div class="field-group" style="margin-top:12px">
+      <label>📷 Fotos</label>
+      <div class="photo-upload-area" id="me_photo_area" style="padding:12px" onclick="document.getElementById('me_photo_input').click()" ondragover="event.preventDefault()" ondrop="handleModalPhotoDrop(event)">
+        <input type="file" id="me_photo_input" accept="image/*" multiple style="display:none" onchange="handleModalPhotoSelect(this)">
+        <div class="photo-upload-hint">📷 Adicionar fotos</div>
+      </div>
+      <div class="photo-grid" id="me_photo_grid">
+        ${existing.map((f,i) => `
+          <div class="photo-thumb">
+            <img src="${f.data}" alt="${f.name}" onclick="openLightbox(${JSON.stringify(existing).replace(/'/g,"&#39;").replace(/"/g,'&quot;')}, ${i})">
+            <button class="remove-photo" onclick="removeModalPhoto(${i})" title="Remover">✕</button>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function handleModalPhotoSelect(input) {
+  const r = DB.rotas.find(x => x.id === modalEditId);
+  if (!r) return;
+  if (!r.fotos) r.fotos = [];
+  Array.from(input.files).forEach(f => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      r.fotos.push({ data: e.target.result, name: f.name });
+      save();
+      refreshModalPhotos(r);
+    };
+    reader.readAsDataURL(f);
+  });
+  input.value = '';
+}
+
+function handleModalPhotoDrop(event) {
+  event.preventDefault();
+  const r = DB.rotas.find(x => x.id === modalEditId);
+  if (!r) return;
+  if (!r.fotos) r.fotos = [];
+  const files = Array.from(event.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  files.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      r.fotos.push({ data: e.target.result, name: f.name });
+      save();
+      refreshModalPhotos(r);
+    };
+    reader.readAsDataURL(f);
+  });
+}
+
+function removeModalPhoto(index) {
+  const r = DB.rotas.find(x => x.id === modalEditId);
+  if (!r || !r.fotos) return;
+  r.fotos.splice(index, 1);
+  save();
+  refreshModalPhotos(r);
+}
+
+function refreshModalPhotos(r) {
+  const grid = document.getElementById('me_photo_grid');
+  if (!grid) return;
+  const fotos = r.fotos || [];
+  grid.innerHTML = fotos.map((f, i) => `
+    <div class="photo-thumb">
+      <img src="${f.data}" alt="${f.name}" onclick="openLightbox(${JSON.stringify(fotos).replace(/"/g,'&quot;')}, ${i})">
+      <button class="remove-photo" onclick="removeModalPhoto(${i})" title="Remover">✕</button>
+    </div>`).join('');
+}
+
+// ============================================================
+// LIGHTBOX
+// ============================================================
+let _lbPhotos = [];
+let _lbIndex = 0;
+
+function openLightbox(fotos, index) {
+  // fotos can arrive as string (from onclick attr) or array
+  _lbPhotos = typeof fotos === 'string' ? JSON.parse(fotos) : fotos;
+  _lbIndex = index;
+  showLightboxPhoto();
+  document.getElementById('lightbox').classList.add('open');
+}
+
+function showLightboxPhoto() {
+  const f = _lbPhotos[_lbIndex];
+  document.getElementById('lightbox-img').src = f.data;
+  document.getElementById('lightbox-caption').textContent = `${f.name}  (${_lbIndex+1}/${_lbPhotos.length})`;
+  document.getElementById('lightbox-nav').style.display = _lbPhotos.length > 1 ? 'flex' : 'none';
+}
+
+function lightboxNav(dir) {
+  _lbIndex = (_lbIndex + dir + _lbPhotos.length) % _lbPhotos.length;
+  showLightboxPhoto();
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+
+// keyboard nav
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  if (e.key === 'ArrowRight') lightboxNav(1);
+  if (e.key === 'ArrowLeft') lightboxNav(-1);
+  if (e.key === 'Escape') closeLightbox();
+});
+document.getElementById('lightbox').addEventListener('click', e => {
+  if (e.target === document.getElementById('lightbox')) closeLightbox();
+});
+
+// ============================================================
+// GOOGLE DRIVE — OAuth2 Implicit Flow
+// ============================================================
+let driveConnected = false;
+let driveAccessToken = null;
+let _driveAutoTimer = null;
+
+function saveDriveClientId() {
+  const id = document.getElementById('drive_client_id').value.trim();
+  if (!id) { toast('Cole o Client ID primeiro', 'err'); return; }
+  DB.config.driveClientId = id;
+  save();
+  toast('Client ID salvo! ✅', 'ok');
+}
+
+function connectDrive() {
+  const clientId = (document.getElementById('drive_client_id').value.trim()) || DB.config.driveClientId || '';
+  if (!clientId || !clientId.includes('.apps.googleusercontent.com')) {
+    toast('Cole um Client ID válido antes de conectar', 'err');
+    return;
+  }
+  DB.config.driveClientId = clientId;
+  save();
+
+  const origin = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/');
+  const redirectUri = window.location.href.split('#')[0].split('?')[0];
+  const scope = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';
+  const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth'
+    + '?client_id=' + encodeURIComponent(clientId)
+    + '&redirect_uri=' + encodeURIComponent(redirectUri)
+    + '&response_type=token'
+    + '&scope=' + encodeURIComponent(scope)
+    + '&prompt=select_account';
+
+  const w = 520, h = 620;
+  const left = Math.round((screen.width - w) / 2);
+  const top  = Math.round((screen.height - h) / 2);
+  const popup = window.open(authUrl, 'driveAuth', `width=${w},height=${h},left=${left},top=${top},toolbar=0,menubar=0`);
+
+  if (!popup) { toast('Popup bloqueado! Libere popups para este site.', 'err'); return; }
+  toast('Aguardando login do Google...', 'info');
+
+  const poll = setInterval(() => {
+    try {
+      const hash = popup.location.hash;
+      if (hash && hash.includes('access_token')) {
+        clearInterval(poll);
+        popup.close();
+        const params = new URLSearchParams(hash.slice(1));
+        driveAccessToken = params.get('access_token');
+        driveConnected = true;
+        onDriveConnected();
+      }
+    } catch(e) { /* cross-origin, keep polling */ }
+    if (popup.closed) {
+      clearInterval(poll);
+      if (!driveConnected) toast('Login cancelado', 'info');
+    }
+  }, 500);
+}
+
+function onDriveConnected() {
+  fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+    headers: { Authorization: 'Bearer ' + driveAccessToken }
+  }).then(r => r.json()).then(info => {
+    showDriveConnected(info.email || 'Conectado');
+  }).catch(() => showDriveConnected('Conectado'));
+}
+
+function showDriveConnected(label) {
+  document.getElementById('drive_setup_panel').style.display = 'none';
+  document.getElementById('drive_connected_panel').style.display = 'block';
+  document.getElementById('drive_user_info').textContent = '✅ ' + label;
+  document.getElementById('header_drive_btn').style.display = '';
+  toast('Drive conectado! ☁️✅', 'ok');
+  listDriveFiles();
+}
+
+function disconnectDrive() {
+  driveAccessToken = null;
+  driveConnected = false;
+  document.getElementById('drive_setup_panel').style.display = 'block';
+  document.getElementById('drive_connected_panel').style.display = 'none';
+  document.getElementById('header_drive_btn').style.display = 'none';
+  toast('Desconectado do Drive', 'info');
+}
+
+function saveToDriveNow() {
+  clearTimeout(_driveAutoTimer);
+  _doSaveDrive(false);
+}
+
+function saveToDrive() {
+  if (!driveConnected || !driveAccessToken) {
+    exportBackup();
+    toast('Drive não conectado — backup local exportado', 'info');
+    return;
+  }
+  saveToDriveNow();
+}
+
+function _doSaveDrive(silent) {
+  if (!driveAccessToken) return;
+  const json = JSON.stringify(DB, null, 2);
+  const fileName = 'rotasdan_' + new Date().toISOString().split('T')[0] + '.json';
+  const boundary = 'rdanboundary';
+  const meta = JSON.stringify({ name: fileName, mimeType: 'application/json' });
+  const body = '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + meta +
+               '\r\n--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + json +
+               '\r\n--' + boundary + '--';
+
+  if (!silent) showSaveIndicator('drive-saving', '☁️ Salvando no Drive...');
+
+  fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + driveAccessToken, 'Content-Type': 'multipart/related; boundary=' + boundary },
+    body
+  }).then(r => r.json()).then(data => {
+    if (data.id) {
+      showSaveIndicator('drive-saved', '☁️ Salvo no Drive');
+      if (!silent) { toast('Salvo no Drive: ' + fileName + ' ✅', 'ok'); listDriveFiles(); }
+    } else {
+      if (!silent) toast('Erro Drive: ' + (data.error?.message || 'falha'), 'err');
+    }
+  }).catch(e => { if (!silent) toast('Erro de rede: ' + e.message, 'err'); });
+}
+
+function listDriveFiles() {
+  if (!driveAccessToken) return;
+  fetch("https://www.googleapis.com/drive/v3/files?q=name+contains+'rotasdan'&orderBy=createdTime+desc&pageSize=8&fields=files(id,name,createdTime)", {
+    headers: { Authorization: 'Bearer ' + driveAccessToken }
+  }).then(r => r.json()).then(data => {
+    const files = data.files || [];
+    const el = document.getElementById('drive_files_list');
+    if (!files.length) { el.innerHTML = '<p style="font-size:0.8rem;color:var(--muted)">Nenhum backup no Drive ainda</p>'; return; }
+    el.innerHTML = '<div style="font-size:0.72rem;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Backups no Drive</div>'
+      + files.map(f => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface);border-radius:8px;margin-bottom:6px">
+          <div>
+            <div style="font-size:0.8rem;font-weight:600">${f.name}</div>
+            <div style="font-size:0.72rem;color:var(--muted)">${new Date(f.createdTime).toLocaleString('pt-BR')}</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="restoreFromDrive('${f.id}','${f.name}')">↩️ Restaurar</button>
+        </div>`).join('');
+  }).catch(() => {});
+}
+
+function loadFromDrive() { listDriveFiles(); toast('Selecione um backup na lista ⬇️', 'info'); }
+
+function restoreFromDrive(fileId, name) {
+  if (!confirm('Restaurar "' + name + '"?\nOs dados atuais serão substituídos.')) return;
+  fetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media', {
+    headers: { Authorization: 'Bearer ' + driveAccessToken }
+  }).then(r => r.json()).then(data => {
+    if (!data.rotas) throw new Error('Formato inválido');
+    DB = { ...DB, ...data };
+    save(false);
+    populateSelects();
+    toast('Restaurado! ' + DB.rotas.length + ' registros ✅', 'ok');
+    updateDataInfo();
+  }).catch(e => toast('Erro: ' + e.message, 'err'));
+}
+
+// Autosave no Drive 30s após última edição
+function scheduleDriveAutosave() {
+  if (!driveConnected || !driveAccessToken) return;
+  clearTimeout(_driveAutoTimer);
+  _driveAutoTimer = setTimeout(() => _doSaveDrive(true), 30000);
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastTimer;
+function toast(msg, type='info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ''; }, 3200);
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+const LOGIN_USER = 'revoltado';
+const LOGIN_PASS = 'revoltafrete1990';
+const SESSION_KEY = 'rotasdan_session';
+
+function doLogin() {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  const userEl = document.getElementById('login-user');
+  const passEl = document.getElementById('login-pass');
+
+  if (user === LOGIN_USER && pass === LOGIN_PASS) {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    const screen = document.getElementById('login-screen');
+    screen.style.opacity = '0';
+    screen.style.transition = 'opacity .3s';
+    setTimeout(() => screen.classList.add('hidden'), 300);
+    errEl.textContent = '';
+  } else {
+    errEl.textContent = '❌ Usuário ou senha incorretos';
+    userEl.classList.add('error');
+    passEl.classList.add('error');
+    passEl.value = '';
+    setTimeout(() => {
+      userEl.classList.remove('error');
+      passEl.classList.remove('error');
+    }, 600);
+  }
+}
+
+function checkSession() {
+  if (sessionStorage.getItem(SESSION_KEY) === '1') {
+    document.getElementById('login-screen').classList.add('hidden');
+  } else {
+    // Focus user field
+    setTimeout(() => document.getElementById('login-user').focus(), 100);
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  load();
+  populateSelects();
+  
+  // Set today's date
+  document.getElementById('c_data').value = new Date().toISOString().split('T')[0];
+  
+  // Set current month in relatorio
+  const now = new Date();
+  document.getElementById('rel_mes').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  
+  // Pre-fill calc fields
+  document.getElementById('calc_consumo').value = DB.config.autonomia;
+  document.getElementById('calc_preco_comb').value = DB.config.preco_comb;
+
+  // Close modals on overlay click
+  document.getElementById('modal_overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal_overlay')) closeModal();
+  });
+  document.getElementById('versions_overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('versions_overlay'))
+      document.getElementById('versions_overlay').classList.remove('open');
+  });
+  
+  calcCustos();
+  updateDataInfo();
+  setupDragFeedback('c');
+  checkSession();
+}
+
+init();
+</script>
+</body>
+</html>
