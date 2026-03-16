@@ -20,6 +20,54 @@
     --warning: #f0a030;
     --radius: 12px;
   }
+  html.light {
+    --bg: #f0f2f7;
+    --surface: #ffffff;
+    --card: #ffffff;
+    --border: #dde1ee;
+    --accent: #c99010;
+    --accent2: #0baa76;
+    --accent3: #e03050;
+    --text: #1a1d2e;
+    --muted: #8490b0;
+    --success: #1faa5c;
+    --warning: #d47a10;
+    --radius: 12px;
+  }
+  html.light body { background: var(--bg); }
+  html.light input, html.light select, html.light textarea { background: #f7f9fc; color: var(--text); }
+  html.light select option { background: #ffffff; color: var(--text); }
+  html.light tr:hover td { background: rgba(200,144,16,.07); }
+  html.light .login-box { box-shadow: 0 8px 40px rgba(0,0,0,.12); }
+  html.light #save-indicator { background: var(--surface); }
+  html.light #toast { background: var(--surface); }
+  html.light .badge-ml { background: #c9901020; color: var(--accent); }
+
+  /* THEME TOGGLE BTN */
+  .btn-theme {
+    background: var(--border); color: var(--text);
+    border: none; border-radius: 20px;
+    padding: 6px 12px; font-size: 1rem;
+    cursor: pointer; transition: background .2s, transform .15s;
+    display: inline-flex; align-items: center;
+    white-space: nowrap;
+  }
+  .btn-theme:hover { background: var(--muted); transform: scale(1.08); }
+
+  /* LOGOUT BTN */
+  .btn-logout {
+    background: transparent;
+    border: 1px solid var(--accent3);
+    color: var(--accent3);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.78rem; font-weight: 700;
+    cursor: pointer; transition: all .2s;
+    display: inline-flex; align-items: center; gap: 5px;
+    white-space: nowrap;
+  }
+  .btn-logout:hover { background: var(--accent3); color: #fff; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; }
   
@@ -399,6 +447,8 @@
     <button class="btn btn-ghost btn-sm" onclick="document.getElementById('restoreInput').click()">📂 Restaurar</button>
     <button class="btn btn-ghost btn-sm" onclick="openVersions()">🕐 Versões</button>
     <button class="btn btn-drive btn-sm" id="header_drive_btn" onclick="saveToDrive()" style="display:none">☁️ Drive</button>
+    <button class="btn-theme" id="theme_btn" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+    <button class="btn-logout" onclick="doLogout()" title="Sair">⎋ Sair</button>
     <input type="file" id="restoreInput" accept=".json" style="display:none" onchange="restoreBackup(this)">
   </div>
 </header>
@@ -2041,10 +2091,47 @@ function checkSession() {
 }
 
 // ============================================================
+// TEMA (claro / escuro)
+// ============================================================
+const THEME_KEY = 'rotasdan_theme';
+
+function applyTheme(theme) {
+  const btn = document.getElementById('theme_btn');
+  if (theme === 'light') {
+    document.documentElement.classList.add('light');
+    if (btn) btn.textContent = '☀️';
+  } else {
+    document.documentElement.classList.remove('light');
+    if (btn) btn.textContent = '🌙';
+  }
+  localStorage.setItem(THEME_KEY, theme);
+}
+
+function toggleTheme() {
+  const isLight = document.documentElement.classList.contains('light');
+  applyTheme(isLight ? 'dark' : 'light');
+}
+
+function loadTheme() {
+  const saved = localStorage.getItem(THEME_KEY) || 'dark';
+  applyTheme(saved);
+}
+
+// ============================================================
+// LOGOUT
+// ============================================================
+function doLogout() {
+  if (!confirm('Deseja sair do sistema?')) return;
+  sessionStorage.removeItem(SESSION_KEY);
+  window.location.reload();
+}
+
+// ============================================================
 // INIT
 // ============================================================
 function init() {
   load();
+  loadTheme();
   populateSelects();
   
   // Set today's date
